@@ -28,9 +28,14 @@ class Actor(nn.Module):
         self.bn3 = nn.BatchNorm1d(32)
         self.fc4 = nn.Linear(32, action_size)
 
-    def forward(self, state):
-        """Build an actor (policy) network that maps states -> actions."""
-        x = self.bn0(state)
+    def forward(self, states: torch.Tensor) -> torch.Tensor:
+        """
+        Build an actor (policy) network that maps states -> actions.
+
+        :param states: states vector
+        :return: actions vector
+        """
+        x = self.bn0(states)
         x = F.selu(self.bn1(self.fc1(x)))
         x = F.selu(self.bn2(self.fc2(x)))
         x = F.selu(self.bn3(self.fc3(x)))
@@ -38,7 +43,14 @@ class Actor(nn.Module):
 
 
 class Critic(nn.Module):
-    def __init__(self, state_size, action_size, random_seed):
+    def __init__(self, state_size: int, action_size: int, random_seed: int):
+        """
+        Critic (Q-value) Model.
+
+        :param state_size: dimension of each state
+        :param action_size: dimension of each action
+        :param random_seed: random seed
+        """
         super(Critic, self).__init__()
         self.seed = torch.manual_seed(random_seed)
 
@@ -49,10 +61,17 @@ class Critic(nn.Module):
         self.fc4 = nn.Linear(32, 16)
         self.fc5 = nn.Linear(16, 1)
 
-    def forward(self, state, action):
-        state = self.bn0(state)
+    def forward(self, states: torch.Tensor, actions: torch.Tensor) -> torch.Tensor:
+        """
+        Build a critic network that maps states -> Q values.
+
+        :param states: states vector
+        :param actions: actions vector
+        :return: Q value for each pair state-action
+        """
+        state = self.bn0(states)
         x_state = F.selu(self.fcs1(state))
-        x = torch.cat((x_state, action), dim=1)
+        x = torch.cat((x_state, actions), dim=1)
         x = F.selu(self.fc2(x))
         x = F.selu(self.fc3(x))
         x = F.selu(self.fc4(x))

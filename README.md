@@ -81,3 +81,7 @@ the agent's weights paths:
 python play.py --env-path /home/carlos/cursos/udacity_rl_2023/repos/deep-reinforcement-learning/p2_continuous-control/Reacher_Linux_env2/Reacher.x86_64
 --weights-path /home/carlos/cursos/udacity_rl_2023/projects/drl_p2_continous_control/weights
 ```
+
+Watch an agent play!
+
+![SegmentLocal](./ipynb/agent.gif "segment")

@@ -12,7 +12,7 @@ import numpy as np
 import torch
 from unityagents import UnityEnvironment
 
-from continous_control.agent import DDPGAgent
+from continuous_control.agent import DDPGAgent
 
 RANDOM_SEED = 10
 

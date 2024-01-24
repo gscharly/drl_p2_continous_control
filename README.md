@@ -1,4 +1,4 @@
-# Udacity Deep Reinforcement Learning course - Policy-based methods - P2 Continous control
+# Udacity Deep Reinforcement Learning course - Policy-based methods - P2 Continuous control
 
 This repository contains code that train an agent to solve the environment proposed in the Policy Based Methods section
 of the Udacity Deep Reinforcement Learning (DRL) course.

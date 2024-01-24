@@ -7,7 +7,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
-from continous_control.model import Actor, Critic
+from continuous_control.model import Actor, Critic
 
 BUFFER_SIZE = int(1e5)  # replay buffer size
 SIGMA_DECAY = 0.95  # Noise decay

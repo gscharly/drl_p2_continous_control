@@ -20,13 +20,11 @@ class Actor(nn.Module):
         self.seed = torch.manual_seed(random_seed)
 
         self.bn0 = nn.BatchNorm1d(state_size)
-        self.fc1 = nn.Linear(state_size, 128)
-        self.bn1 = nn.BatchNorm1d(128)
-        self.fc2 = nn.Linear(128, 64)
-        self.bn2 = nn.BatchNorm1d(64)
-        self.fc3 = nn.Linear(64, 32)
-        self.bn3 = nn.BatchNorm1d(32)
-        self.fc4 = nn.Linear(32, action_size)
+        self.fc1 = nn.Linear(state_size, 256)
+        self.bn1 = nn.BatchNorm1d(256)
+        self.fc2 = nn.Linear(256, 128)
+        self.bn2 = nn.BatchNorm1d(128)
+        self.fc3 = nn.Linear(128, action_size)
 
     def forward(self, states: torch.Tensor) -> torch.Tensor:
         """
@@ -36,10 +34,9 @@ class Actor(nn.Module):
         :return: actions vector
         """
         x = self.bn0(states)
-        x = F.selu(self.bn1(self.fc1(x)))
-        x = F.selu(self.bn2(self.fc2(x)))
-        x = F.selu(self.bn3(self.fc3(x)))
-        return torch.tanh(self.fc4(x))
+        x = F.leaky_relu(self.bn1(self.fc1(x)))
+        x = F.leaky_relu(self.bn2(self.fc2(x)))
+        return torch.tanh(self.fc3(x))
 
     def add_parameter_noise(self, scalar: float = .1):
         """
@@ -49,7 +46,6 @@ class Actor(nn.Module):
         self.fc1.weight.data += torch.randn_like(self.fc1.weight.data) * scalar
         self.fc2.weight.data += torch.randn_like(self.fc2.weight.data) * scalar
         self.fc3.weight.data += torch.randn_like(self.fc3.weight.data) * scalar
-        self.fc4.weight.data += torch.randn_like(self.fc4.weight.data) * scalar
 
 
 class Critic(nn.Module):
@@ -65,11 +61,10 @@ class Critic(nn.Module):
         self.seed = torch.manual_seed(random_seed)
 
         self.bn0 = nn.BatchNorm1d(state_size)
-        self.fcs1 = nn.Linear(state_size, 128)
-        self.fc2 = nn.Linear(128 + action_size, 64)
-        self.fc3 = nn.Linear(64, 32)
-        self.fc4 = nn.Linear(32, 16)
-        self.fc5 = nn.Linear(16, 1)
+        self.fcs1 = nn.Linear(state_size, 256)
+        self.fc2 = nn.Linear(256 + action_size, 128)
+        self.fc3 = nn.Linear(128, 64)
+        self.fc4 = nn.Linear(64, 1)
 
     def forward(self, states: torch.Tensor, actions: torch.Tensor) -> torch.Tensor:
         """
@@ -80,9 +75,8 @@ class Critic(nn.Module):
         :return: Q value for each pair state-action
         """
         state = self.bn0(states)
-        x_state = F.selu(self.fcs1(state))
+        x_state = F.leaky_relu(self.fcs1(state))
         x = torch.cat((x_state, actions), dim=1)
-        x = F.selu(self.fc2(x))
-        x = F.selu(self.fc3(x))
-        x = F.selu(self.fc4(x))
-        return F.selu(self.fc5(x))
+        x = F.leaky_relu(self.fc2(x))
+        x = F.leaky_relu(self.fc3(x))
+        return F.leaky_relu(self.fc4(x))

@@ -99,22 +99,25 @@ class DDPGAgent:
             experiences = self.memory.sample()
             self.learn(experiences, self.gamma)
 
-    def act(self, states: np.ndarray, add_noise: bool = True) -> np.ndarray:
+    def act(self, states: np.ndarray, add_noise: bool = True, train: bool = True) -> np.ndarray:
         """
         Returns actions for given state as per current policy.
 
         :param states: states vector
         :param add_noise: whether to add noise to encourage exploration
+        :param train: whether the agent is being trained or just being used to play
         :return: actions vector
         """
         states = torch.from_numpy(states).float().to(device)
         self.actor_local.eval()
-        self.actor_noised.eval()
+        if self.noise_scalar is not None:
+            self.actor_noised.eval()
+
         # Adaptive noise scaling from https://soeren-kirchner.medium.com/deep-deterministic-policy-gradient-ddpg-with-and-without-ornstein-uhlenbeck-process-e6d272adfc3
         with torch.no_grad():
             # get the action values from the noised actor for comparison
             actions = self.actor_local(states).cpu().data.numpy()
-            if add_noise and self.noise_scalar is not None:
+            if add_noise and self.noise_scalar is not None and train:
                 # hard copy the actor_regular to actor_noised
                 self.actor_noised.load_state_dict(self.actor_local.state_dict().copy())
                 # add noise to the copy
@@ -135,7 +138,7 @@ class DDPGAgent:
                 actions = actions_noised
 
         self.actor_local.train()
-        if add_noise and self.noise_scalar is None:
+        if add_noise and self.noise_scalar is None and train:
             actions += self.noise.sample()
         return np.clip(actions, -1, 1)
 

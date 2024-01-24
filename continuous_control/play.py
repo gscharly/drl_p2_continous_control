@@ -37,7 +37,7 @@ def play_with_agent(env: UnityEnvironment, brain_nm: str, agent: DDPGAgent, num_
     states = env_info.vector_observations  # get the current state for each agent
     score = np.zeros(num_agents)  # initialize the scores for each agent
     while True:
-        actions = agent.act(states)  # select action for each agent
+        actions = agent.act(states, train=False)  # select action for each agent
         env_info = env.step(actions)[brain_nm]  # send actions to the environment
         next_states, rewards, dones = env_info.vector_observations, env_info.rewards, env_info.local_done
         score += rewards  # update the score

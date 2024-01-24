@@ -109,6 +109,7 @@ class DDPGAgent:
         """
         states = torch.from_numpy(states).float().to(device)
         self.actor_local.eval()
+        self.actor_noised.eval()
         # Adaptive noise scaling from https://soeren-kirchner.medium.com/deep-deterministic-policy-gradient-ddpg-with-and-without-ornstein-uhlenbeck-process-e6d272adfc3
         with torch.no_grad():
             # get the action values from the noised actor for comparison
@@ -129,6 +130,9 @@ class DDPGAgent:
                     self.noise_scalar *= self.noise_scalar_decay
                 if distance <= self.noise_distance:
                     self.noise_scalar /= self.noise_scalar_decay
+
+                #  set the noised action as action
+                actions = actions_noised
 
         self.actor_local.train()
         if add_noise and self.noise_scalar is None:
@@ -165,7 +169,6 @@ class DDPGAgent:
         self.critic_optimizer.zero_grad()
         critic_loss.backward()
         # Gradient clipping
-        # torch.nn.utils.clip_grad_norm(self.critic_local.parameters(), 1)
         self.critic_optimizer.step()
 
         # ---------------------------- update actor ---------------------------- #

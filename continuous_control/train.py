@@ -106,9 +106,10 @@ def plot_scores(scores: List):
 
 def train_ddpg_complete(env: UnityEnvironment, brain_nm: str, agent: DDPGAgent, weights_path: str,
                         num_agents: int = 20, n_episodes: int = 2000,
-                        max_t: int = 1000, n_episodes_score: int = 100):
+                        max_t: int = 1000, n_episodes_score: int = 100, solving_score: int = 30):
     scores_deque = deque(maxlen=n_episodes_score)
     scores = []
+    solved_env = 0
     for i_episode in range(1, n_episodes + 1):
         env_info = env.reset(train_mode=True)[brain_nm]
         states = env_info.vector_observations
@@ -126,9 +127,13 @@ def train_ddpg_complete(env: UnityEnvironment, brain_nm: str, agent: DDPGAgent, 
                 break
         scores_deque.append(np.mean(score))
         scores.append(np.mean(score))
-        print('\rEpisode {}\tAverage Score: {:.2f}'.format(i_episode, np.mean(scores_deque)), end="")
+        print('\rEpisode {}\t Score: {:.2f}\tAverage Score: {:.2f}'.format(i_episode,
+                                                                           np.mean(score),
+                                                                           np.mean(scores_deque)))
+        if not solved_env and i_episode >= n_episodes_score and np.mean(scores_deque) > solving_score:
+            print(f'Agent has been solved in {i_episode} episodes')
+            solved_env = 1
 
-        print('\rEpisode {}\t Score: {:.2f}'.format(i_episode, np.mean(score)))
         if i_episode % n_episodes_score == 0:
             torch.save(agent.actor_local.state_dict(), f'{weights_path}/checkpoint_actor.pth')
             torch.save(agent.critic_local.state_dict(), f'{weights_path}/checkpoint_critic.pth')

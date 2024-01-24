@@ -41,6 +41,16 @@ class Actor(nn.Module):
         x = F.selu(self.bn3(self.fc3(x)))
         return torch.tanh(self.fc4(x))
 
+    def add_parameter_noise(self, scalar: float = .1):
+        """
+        Add random noise weighted by a scalar to the layers' weights
+        :param scalar: float
+        """
+        self.fc1.weight.data += torch.randn_like(self.fc1.weight.data) * scalar
+        self.fc2.weight.data += torch.randn_like(self.fc2.weight.data) * scalar
+        self.fc3.weight.data += torch.randn_like(self.fc3.weight.data) * scalar
+        self.fc4.weight.data += torch.randn_like(self.fc4.weight.data) * scalar
+
 
 class Critic(nn.Module):
     def __init__(self, state_size: int, action_size: int, random_seed: int):

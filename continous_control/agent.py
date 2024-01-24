@@ -21,7 +21,8 @@ class DDPGAgent:
     def __init__(self, state_size: int, action_size: int, num_agents: int = 20, random_seed: int = 10,
                  lr_actor: float = 1e-4,
                  lr_critic: float = 3e-4, weight_decay_actor: float = .0, weight_decay_critic: float = .0,
-                 gamma: float = 0.99, batch_size: int = 128, tau: float = 1e-3, update_every: int = None
+                 gamma: float = 0.99, batch_size: int = 128, tau: float = 1e-3, update_every: int = None,
+                 noise_scalar: float = None, noise_scalar_decay: float = .99, noise_distance: float = None
                  ):
         """
         Agent that implements the DDPG algorithm
@@ -47,6 +48,9 @@ class DDPGAgent:
         self.tau = tau
         self.update_every = update_every
         self.num_agents = num_agents
+        self.noise_scalar = noise_scalar
+        self.noise_scalar_decay = noise_scalar_decay
+        self.noise_distance = noise_distance
         random.seed(random_seed)
 
         # Actor Network (w/ Target Network)
@@ -54,6 +58,8 @@ class DDPGAgent:
         self.actor_target = Actor(state_size, action_size, random_seed).to(device)
         self.actor_optimizer = torch.optim.Adam(self.actor_local.parameters(), lr=lr_actor,
                                                 weight_decay=weight_decay_actor)
+        if self.noise_scalar is not None:
+            self.actor_noised = Actor(state_size, action_size, random_seed).to(device)
 
         # Critic Network (w/ Target Network)
         self.critic_local = Critic(state_size, action_size, random_seed).to(device)
@@ -103,10 +109,29 @@ class DDPGAgent:
         """
         states = torch.from_numpy(states).float().to(device)
         self.actor_local.eval()
+        # Adaptive noise scaling from https://soeren-kirchner.medium.com/deep-deterministic-policy-gradient-ddpg-with-and-without-ornstein-uhlenbeck-process-e6d272adfc3
         with torch.no_grad():
+            # get the action values from the noised actor for comparison
             actions = self.actor_local(states).cpu().data.numpy()
+            if add_noise and self.noise_scalar is not None:
+                # hard copy the actor_regular to actor_noised
+                self.actor_noised.load_state_dict(self.actor_local.state_dict().copy())
+                # add noise to the copy
+                self.actor_noised.add_parameter_noise(self.noise_scalar)
+                # get the next action values from the noised actor
+                actions_noised = self.actor_noised(states).cpu().data.numpy()
+                # measure the distance between the action values from the regular and
+                # the noised actor to adjust the amount of noise that will be added next round
+                distance = np.sqrt(np.mean(np.square(actions - actions_noised)))
+
+                # adjust the amount of noise given to the actor_noised
+                if distance > self.noise_distance:
+                    self.noise_scalar *= self.noise_scalar_decay
+                if distance <= self.noise_distance:
+                    self.noise_scalar /= self.noise_scalar_decay
+
         self.actor_local.train()
-        if add_noise:
+        if add_noise and self.noise_scalar is None:
             actions += self.noise.sample()
         return np.clip(actions, -1, 1)
 

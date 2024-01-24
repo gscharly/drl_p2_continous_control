@@ -4,6 +4,7 @@ Script that can be used to train a DDPG agent to solve the Reacher simple enviro
 
 import argparse
 from collections import deque
+import pickle
 from typing import List
 
 import matplotlib.pyplot as plt
@@ -75,6 +76,21 @@ def parse_args():
                         help='Update actor & critic after t timesteps',
                         default=None,
                         type=float)
+    parser.add_argument('--noise-scalar',
+                        dest='noise_scalar',
+                        help='Scalar that represents the noise to use when altering the actor weights',
+                        default=None,
+                        type=float)
+    parser.add_argument('--noise-scalar-decay',
+                        dest='noise_scalar_decay',
+                        help='Scalar that how much should the actor noise increase/decrease in each iteration',
+                        default=.99,
+                        type=float)
+    parser.add_argument('--noise-distance',
+                        dest='noise_distance',
+                        help='Distance between the actor and the noised version of the actor to update the noise scalar',
+                        default=.1,
+                        type=float)
     args = parser.parse_args()
     return args
 
@@ -143,7 +159,8 @@ def main():
         random_seed=RANDOM_SEED, lr_actor=args.lr_actor, lr_critic=args.lr_critic,
         weight_decay_actor=args.weight_decay_actor, weight_decay_critic=args.weight_decay_critic,
         gamma=args.gamma, batch_size=args.batch_size, tau=args.tau, update_every=args.update_every,
-        num_agents=num_agents
+        num_agents=num_agents, noise_scalar=args.noise_scalar, noise_scalar_decay=args.noise_scalar_decay,
+        noise_distance=args.noise_distance
     )
     # Train agent
     result_scores, trained_agent = train_ddpg_complete(
@@ -151,6 +168,10 @@ def main():
         max_t=args.max_t, num_agents=num_agents
     )
     plot_scores(result_scores)
+
+    # Store scores
+    with open(f'{args.weights_path}/scores.pkl', 'wb') as f:
+        pickle.dump(result_scores, f)
 
 
 if __name__ == '__main__':

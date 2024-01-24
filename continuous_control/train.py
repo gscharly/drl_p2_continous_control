@@ -83,7 +83,7 @@ def parse_args():
                         type=float)
     parser.add_argument('--noise-scalar-decay',
                         dest='noise_scalar_decay',
-                        help='Scalar that how much should the actor noise increase/decrease in each iteration',
+                        help='Scalar that represents how much should the actor noise increase/decrease in each iteration',
                         default=.99,
                         type=float)
     parser.add_argument('--noise-distance',

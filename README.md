@@ -5,6 +5,8 @@ of the Udacity Deep Reinforcement Learning (DRL) course.
 
 # Environment
 
+![SegmentLocal](./ipynb/agent.gif "segment")
+
 The environment aget is a double-jointed arm that can move to target locations. A reward of +0.1 is provided for each
 step that the agent's hand is in the goal location. The goal of the agent is to maintain its position at the target
 location for as many time steps as possible. The environment is considered solved when the agent achieves an
@@ -81,7 +83,3 @@ the agent's weights paths:
 python play.py --env-path /home/carlos/cursos/udacity_rl_2023/repos/deep-reinforcement-learning/p2_continuous-control/Reacher_Linux_env2/Reacher.x86_64
 --weights-path /home/carlos/cursos/udacity_rl_2023/projects/drl_p2_continous_control/weights
 ```
-
-Watch an agent play!
-
-![SegmentLocal](./ipynb/agent.gif "segment")
